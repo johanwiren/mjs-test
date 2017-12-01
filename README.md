@@ -9,7 +9,6 @@ Add this library as a dependecy in your `mos.yml` file:
 ```
 libs:
   - origin: https://github.com/johanwiren/mjs-test
-
 ```
 
 Add a configuration toggle in `mos.yml` enable testing mode:
@@ -18,13 +17,13 @@ Add a configuration toggle in `mos.yml` enable testing mode:
 config_schema:
   - ["bank", "o", {hide: true}]
   - ["bank.test_mode", "b", false, {title: "Run only tests"}]
-
 ```
 
-Build your firmware to pull dependencies and set up config:
+Build and flash your firmware to pull dependencies.
 
 ```
 mos build --local --platform <your platform>
+mos flash
 ```
 
 Write some tests in `fs/bank_tests.js`:
