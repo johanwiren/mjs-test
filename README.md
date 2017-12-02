@@ -21,9 +21,9 @@ config_schema:
 
 Build and flash your firmware to pull dependencies.
 
-```
-mos build --local --platform <your platform>
-mos flash
+```sh
+$ mos build --local --platform <your platform>
+$ mos flash
 ```
 
 Write some tests in `fs/bank_tests.js`:
@@ -71,14 +71,14 @@ if (Cfg.get("bank.test_mode")) {
 
 Enable test mode:
 
-```
-mos config-set bank.test_mode=true
+```sh
+$ mos config-set bank.test_mode=true
 ```
 
 Upload your code and watch the tests complete in the console:
 
-```
-mos put fs/bank.js && mos put fs/init.js && mos call Sys.Reboot && mos console
+```sh
+$ mos put fs/bank.js && mos put fs/init.js && mos call Sys.Reboot && mos console
 ...
 [Dec  1 22:48:57.606] mgos_init            Init done, RAM: 295504 total, 222688 free, 222688 min free
 [Dec  1 22:48:57.680] Test mode only 
@@ -104,6 +104,57 @@ If you encounter errors you will get a stack trace and no further tests will be 
 [Dec  1 22:50:22.749]   at init.js:10
 [Dec  1 22:50:22.752] MJS error: Assertion failed
 
+```
+
+## Mocks
+
+There are no helper functions for mocking, but mocking in javascript can easily be accomplished:
+
+```javascript
+// Mock FBI.Logger
+let FBI = {
+    Logger: {
+        // Mocked method
+        log: function(arg) {
+            FBI.Logger.updateInvocations++;
+            return;
+        },
+        logInvocations: 0,
+        logWasInvoked: function() {
+            let wasInvoked = FBI.Logger.logInvocations > 0;
+            FBI.Logger.logInvocations = 0;
+            return wasInvoked;
+        },
+        _reset: function() {
+            FBI.Logger.logInvocations = 0;
+        }
+    }
+};
+
+// Tests
+let s = TestSuite.create("fbi_tests");
+s.setUp = FBI.Logger._reset;
+s.tests = [
+    function() {
+        // Given
+        let account = Account.create();
+
+        // When
+        account.withdraw(100);
+
+        // Then
+        assertTrue(FBI.Logger.logWasInvoked());
+    },
+    function() {
+        // Given
+        let account = Account.create({"secret": true});
+
+        // When
+        account.withdraw(100);
+
+        // Then
+        assertFalse(FBI.Logger.logWasInvoked());
+    }];
 ```
 
 ## Bugs
